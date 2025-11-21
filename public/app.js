@@ -182,12 +182,13 @@ async function refreshHomeUsers(){
 
 async function loadUsers(){
   if (!userList) return;
-  userList.innerHTML = '';
+  userList.innerHTML = '<li>Chargement...</li>';
   try {
     const res = await fetch('/api/users_with_counts');
     if (!res.ok) { userList.innerHTML = '<li>Erreur chargement</li>'; return }
     const users = await res.json();
     if (!users || users.length === 0) { userList.innerHTML = '<li>Aucun utilisateur</li>'; if (userStatus) userStatus.textContent = 'Aucun utilisateur trouvé.'; return }
+    userList.innerHTML = '';
     users.forEach(u => {
       const li = document.createElement('li');
       const nameSpan = document.createElement('span');
@@ -245,6 +246,8 @@ async function addUser(e){
 
 if (userForm) userForm.addEventListener('submit', addUser);
 
+
+
 enterBtn && enterBtn.addEventListener('click', ()=>{
   const uid = homeUserSelect.value;
   const name = homeUserSelect.options[homeUserSelect.selectedIndex]?.text || '';
@@ -273,7 +276,7 @@ if (adminPasswordInput) {
 homeUserSelect && homeUserSelect.addEventListener('change', ()=>{
   const uid = homeUserSelect.value;
   const name = homeUserSelect.options[homeUserSelect.selectedIndex]?.text || '';
-  if (name === 'admin') {
+  if (name.toLowerCase() === 'admin') {
     adminPasswordLabel.style.display = 'block';
     adminPasswordInput.value = '';
     adminPasswordInput.focus();
@@ -294,7 +297,7 @@ if (enterBtn) {
   enterBtn.addEventListener('click', function() {
     const uid = homeUserSelect.value;
     const name = homeUserSelect.options[homeUserSelect.selectedIndex]?.text || '';
-    if (name === 'admin') {
+    if (name.toLowerCase() === 'admin') {
       if (adminPasswordInput.value === '0902') {
         localStorage.setItem('selectedUserId', uid);
         localStorage.setItem('selectedUserName', name);
@@ -336,7 +339,7 @@ async function loadMonth(){
   }
 
   const currentName = (currentUserName && currentUserName.textContent || '').toLowerCase();
-  const qs = (currentName === 'admin') ? `month=${month}` : `month=${month}&userId=${activeUser}`;
+  const qs = (currentName.toLowerCase() === 'admin') ? `month=${month}` : `month=${month}&userId=${activeUser}`;
   let usersMap = {};
   try { const ru = await fetch('/api/users'); if (ru.ok) { const us = await ru.json(); us.forEach(u => usersMap[u.id] = u.name); } } catch (e) {}
   const res = await fetch(`/api/entries?${qs}`);
