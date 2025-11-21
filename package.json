@@ -1,0 +1,25 @@
+{
+  "name": "heures-caillet-ferblanterie",
+  "version": "0.1.0",
+  "description": "Application pour enregistrer les heures de travail et exporter un récapitulatif mensuel en PDF.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "heures",
+    "timesheet",
+    "pdf",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pdfkit": "^0.13.0",
+    "puppeteer": "^24.31.0",
+    "sqlite3": "^5.1.6"
+  }
+}

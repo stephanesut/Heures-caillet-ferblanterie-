@@ -1,0 +1,33 @@
+:root{--bg:#f7f8fa;--card:#fff;--accent:#1167b1}
+*{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
+body{background:var(--bg);margin:0;color:#111}
+.container{max-width:900px;margin:32px auto;padding:0 16px}
+h1{margin-bottom:12px}
+.card{background:var(--card);padding:16px;border-radius:8px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tab-btn{background:transparent;border:1px solid #ddd;padding:8px 12px;border-radius:6px;cursor:pointer;color:#000}
+.tab-btn.active{background:#6ea8ff;color:#000;border-color:#5c91d6}
+.tab{display:none}
+.tab.active{display:block}
+label#label-chantier-other{margin-top:8px}
+
+/* Toast notifications */
+#toast-container{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:#222;color:#fff;padding:10px 14px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.12);min-width:200px;opacity:0;transform:translateY(6px);transition:opacity .22s ease,transform .22s ease}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:#2e7d32}
+.toast.error{background:#c62828}
+.toast .title{font-weight:600;margin-bottom:4px}
+.toast .msg{font-size:13px;line-height:1.2}
+
+/* Logo top-right */
+#site-logo{position:fixed;top:12px;right:12px;z-index:10000;width:160px;max-width:22vw;height:auto;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);background:transparent}
+
+form label{display:block;margin-bottom:8px}
+input{width:100%;padding:8px;margin-top:6px;border:1px solid #ddd;border-radius:4px}
+button{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+button:active{transform:translateY(1px)}
+.actions{display:flex;gap:8px;margin:8px 0}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{border:1px solid #eee;padding:8px;text-align:left}
+tfoot td{font-weight:600}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Ultra Simple</title>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #f9f9f9; }
+    div { padding: 15px; margin: 10px 0; border-radius: 4px; }
+    #js-test { background: #4CAF50; color: white; }
+    #api-test { background: #2196F3; color: white; }
+    #error { background: #f44336; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Test Ultra Simple</h1>
+  
+  <div id="js-test" style="display:none;">
+    ✓ Le JavaScript fonctionne !
+  </div>
+  
+  <div id="error" style="display:none;">
+    ✗ Le JavaScript ne fonctionne pas
+  </div>
+  
+  <div id="api-test" style="display:none;">
+    ✓ Les données de l'API arrivent !
+  </div>
+  
+  <div id="result"></div>
+
+  <script>
+    // Afficher que le JavaScript fonctionne
+    document.getElementById('js-test').style.display = 'block';
+    
+    // Essayer de récupérer les utilisateurs
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/users', true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        document.getElementById('api-test').style.display = 'block';
+        var result = document.getElementById('result');
+        result.innerHTML = '<h3>Réponse API :</h3><pre>' + xhr.responseText + '</pre>';
+      }
+    };
+    xhr.send();
+  </script>
+</body>
+</html>

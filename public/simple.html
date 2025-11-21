@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Simple</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    #user-list { list-style: none; padding: 0; }
+    #user-list li { padding: 10px; background: #f0f0f0; margin: 5px 0; border-radius: 4px; }
+    #error { color: red; font-weight: bold; }
+    #success { color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Test Simple - Liste des Utilisateurs</h1>
+  
+  <div id="status">Chargement...</div>
+  
+  <h2>Utilisateurs :</h2>
+  <ul id="user-list"></ul>
+  
+  <div id="error"></div>
+  <div id="success"></div>
+
+  <script>
+    console.log("Script chargé !");
+    
+    function loadUsers() {
+      console.log("Tentative de chargement des utilisateurs...");
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/users', true);
+      xhr.setRequestHeader('Accept', 'application/json');
+      
+      xhr.onload = function() {
+        console.log("Réponse reçue :", xhr.status);
+        console.log("Contenu :", xhr.responseText);
+        
+        if (xhr.status !== 200) {
+          document.getElementById('error').innerText = "Erreur API: " + xhr.status;
+          console.error("Erreur API", xhr.status);
+          return;
+        }
+        
+        try {
+          var users = JSON.parse(xhr.responseText);
+          console.log("Utilisateurs reçus :", users);
+          
+          var list = document.getElementById('user-list');
+          list.innerHTML = '';
+          
+          if (!users || users.length === 0) {
+            list.innerHTML = '<li>Aucun utilisateur</li>';
+            return;
+          }
+          
+          users.forEach(function(user) {
+            var li = document.createElement('li');
+            li.innerText = user.name + ' (ID: ' + user.id + ')';
+            list.appendChild(li);
+          });
+          
+          document.getElementById('status').innerText = "✓ " + users.length + " utilisateur(s) chargé(s)";
+          document.getElementById('success').innerText = "Succès!";
+        } catch (e) {
+          console.error("Erreur parsing JSON:", e);
+          document.getElementById('error').innerText = "Erreur parsing: " + e.message;
+        }
+      };
+      
+      xhr.onerror = function() {
+        console.error("Erreur réseau");
+        document.getElementById('error').innerText = "Erreur réseau";
+      };
+      
+      xhr.send();
+    }
+    
+    // Charger les utilisateurs au démarrage
+    loadUsers();
+  </script>
+</body>
+</html>

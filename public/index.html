@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta name="bypass-tunnel-reminder" content="true" />
+  <title>Enregistrement des heures</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <img id="site-logo" src="/logo.png" alt="Logo">
+  <button id="home-btn" style="position:fixed;top:12px;left:12px;z-index:10001;background:#fff;padding:6px 10px;border-radius:6px;border:1px solid #ccc;cursor:pointer;display:flex;align-items:center;gap:8px">
+    <!-- simple home SVG icon -->
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10.5z" fill="#1167b1"/>
+    </svg>
+    <span>Accueil</span>
+  </button>
+  <!-- Home screen: choose user before entering the app -->
+  <div id="home-screen" class="container card" style="max-width:520px; margin-top:80px; text-align:center">
+    <h2>Bienvenue — Choisissez votre utilisateur</h2>
+    <p>Sélectionnez votre compte pour commencer à enregistrer des heures.</p>
+    <label style="display:block; margin:12px 0">
+      <select id="home-user-select" style="width:100%; padding:8px;">
+        <option value="">-- Choisir un utilisateur --</option>
+      </select>
+    </label>
+    <label id="admin-password-label" style="display:none; margin:12px 0">
+      Mot de passe admin<br>
+      <input id="admin-password" type="password" style="width:100%;padding:8px" autocomplete="off" placeholder="Mot de passe">
+    </label>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button id="enter-btn">Entrer</button>
+      <button id="enter-guest" style="background:#777">Entrer en invité</button>
+    </div>
+  </div>
+
+  <main class="container" id="app-main" style="display:none">
+    <h1>Enregistrer mes heures</h1>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="chantier-tab">Chantiers</button>
+      <button class="tab-btn" data-tab="heures-tab">Heures</button>
+      <button class="tab-btn" data-tab="recap-tab">Récapitulatif</button>
+      <button class="tab-btn" data-tab="users-tab" style="display:none">Utilisateurs</button>
+    </nav>
+
+    <section id="chantier-tab" class="card tab active">
+      <h2>Gestion des chantiers</h2>
+      <form id="chantier-form">
+        <label>Nom du chantier<br><input id="chantier-name" required></label>
+        <button type="submit">Ajouter chantier</button>
+      </form>
+
+      <ul id="chantier-list"></ul>
+    </section>
+
+    <section id="heures-tab" class="card tab">
+      <h2>Ajouter une entrée</h2>
+      <form id="entry-form">
+        <label>Nom du chantier (ou cliquez sur un chantier dans l'onglet Chantiers)<br>
+          <select id="chantier-select">
+            <option value="">-- Choisir un chantier --</option>
+          </select>
+        </label>
+            <!-- current user badge (selection on home screen) -->
+            <div id="current-user" style="margin:8px 0;font-weight:600">Utilisateur courant: <span id="current-user-name">—</span></div>
+        <label id="label-chantier-other" style="display:none">Autre chantier<br><input id="chantier-other" placeholder="Nom du chantier (autre)"></label>
+        <label>Date<br><input id="date" type="date" required></label>
+        <label>Temps travaillé (heures)<br>
+          <select id="hours-select" required>
+            <option value="">-- Choisir --</option>
+            <option value="9">9h</option>
+            <option value="8.75">8h45</option>
+            <option value="8.5">8h30</option>
+            <option value="8.25">8h15</option>
+            <option value="8">8h</option>
+            <option value="other">Autre...</option>
+          </select>
+        </label>
+        <label id="label-hours-other" style="display:none">Autre (heures)<br><input id="hours-other" type="number" step="0.25" min="0"></label>
+        <button type="submit">Ajouter</button>
+      </form>
+    </section>
+
+    <section id="recap-tab" class="card tab">
+      <h2>Récapitulif mensuel</h2>
+      <label>Mois<br><input id="month" type="month"></label>
+      <!-- utilisateur filter removed from recap -->
+      <div class="actions">
+        <button id="load">Charger</button>
+        <button id="export">Exporter PDF</button>
+      </div>
+
+      <table id="table">
+        <thead>
+          <tr><th>Date</th><th>Chantier</th><th>Utilisateur</th><th>Heures</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td colspan="3">Total</td><td id="total">0</td></tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <section id="users-tab" class="card tab" style="display:none">
+      <h2>Gestion des utilisateurs (admin)</h2>
+      <form id="user-form">
+        <label>Nom utilisateur<br><input id="user-name" required placeholder="Nom"></label>
+        <button type="submit">Ajouter utilisateur</button>
+      </form>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <button id="reload-users">Recharger</button>
+        <div id="user-status" style="color:#666;font-size:0.9em">En attente...</div>
+      </div>
+      <div id="debug-info" style="color:red;font-size:0.8em;margin-top:5px;white-space:pre-wrap;"></div>
+      <ul id="user-list"></ul>
+    </section>
+  </main>
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script defer src="/app.js"></script>
+</body>
+</html>
