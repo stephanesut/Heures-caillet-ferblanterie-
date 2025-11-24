@@ -208,7 +208,7 @@ async function loadUsers(){
       });
       li.appendChild(renameBtn);
 
-      const canDelete = (u.name.toLowerCase() !== 'admin');
+      const canDelete = (u.name !== 'Admin');
       if (canDelete) {
         const del = document.createElement('button'); del.textContent = 'Supprimer'; del.style.marginLeft = '8px';
         del.addEventListener('click', async ()=>{
@@ -221,7 +221,7 @@ async function loadUsers(){
         });
         li.appendChild(del);
       } else {
-        const span = document.createElement('span'); span.style.opacity = 0.8; span.style.marginLeft = '6px'; span.textContent = '(admin - protégé)'; li.appendChild(span);
+        const span = document.createElement('span'); span.style.opacity = 0.8; span.style.marginLeft = '6px'; span.textContent = '(Admin - protégé)'; li.appendChild(span);
       }
 
       if (String(u.id) === String(activeUser)) { const me = document.createElement('strong'); me.textContent = ' • Vous'; me.style.marginLeft = '6px'; li.appendChild(me); }
