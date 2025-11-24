@@ -9,6 +9,12 @@ const app = express();
 
 // Configuration de la base de données
 const isProduction = process.env.NODE_ENV === 'production';
+
+if (!process.env.DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is not set!');
+  process.exit(1);
+}
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: isProduction ? { rejectUnauthorized: false } : false
