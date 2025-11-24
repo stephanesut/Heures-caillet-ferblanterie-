@@ -128,10 +128,10 @@ app.post('/api/users', (req, res) => {
 
 app.delete('/api/users/:id', (req, res) => {
   const id = req.params.id;
-  // Prevent deletion if user has entries
-  db.get('SELECT COUNT(*) AS c FROM entries WHERE user_id = ?', [id], (err, row) => {
+  // Supprimer d'abord toutes les entrées de l'utilisateur
+  db.run('DELETE FROM entries WHERE user_id = ?', [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (row && row.c > 0) return res.status(400).json({ error: 'User has entries and cannot be deleted' });
+    // Puis supprimer l'utilisateur
     db.run('DELETE FROM users WHERE id = ?', [id], function(err2) {
       if (err2) return res.status(500).json({ error: err2.message });
       if (this.changes === 0) return res.status(404).json({ error: 'Not found' });

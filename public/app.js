@@ -208,19 +208,20 @@ async function loadUsers(){
       });
       li.appendChild(renameBtn);
 
-      const canDelete = (u.name.toLowerCase() !== 'admin') && (typeof u.entries_count === 'undefined' || u.entries_count === 0);
+      const canDelete = (u.name.toLowerCase() !== 'admin');
       if (canDelete) {
         const del = document.createElement('button'); del.textContent = 'Supprimer'; del.style.marginLeft = '8px';
         del.addEventListener('click', async ()=>{
-          if (!confirm('Supprimer cet utilisateur ?')) return;
+          const confirmMsg = u.entries_count > 0 
+            ? `Supprimer ${u.name} et ses ${u.entries_count} entrées ?` 
+            : `Supprimer ${u.name} ?`;
+          if (!confirm(confirmMsg)) return;
           const r = await fetch('/api/users/' + u.id, { method: 'DELETE' });
           if (r.ok) { showToast('Utilisateur supprimé', 'success'); loadUsers(); refreshHomeUsers(); } else { const txt = await r.text(); showToast('Erreur suppression: ' + txt, 'error'); }
         });
         li.appendChild(del);
-      } else if (u.name.toLowerCase() === 'admin') {
-        const span = document.createElement('span'); span.style.opacity = 0.8; span.style.marginLeft = '6px'; span.textContent = '(admin)'; li.appendChild(span);
       } else {
-        const note = document.createElement('em'); note.style.marginLeft = '8px'; note.style.opacity = 0.8; note.textContent = 'Suppression impossible — entrées existantes'; li.appendChild(note);
+        const span = document.createElement('span'); span.style.opacity = 0.8; span.style.marginLeft = '6px'; span.textContent = '(admin - protégé)'; li.appendChild(span);
       }
 
       if (String(u.id) === String(activeUser)) { const me = document.createElement('strong'); me.textContent = ' • Vous'; me.style.marginLeft = '6px'; li.appendChild(me); }

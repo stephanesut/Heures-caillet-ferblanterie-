@@ -262,15 +262,10 @@ app.delete('/api/users/:id', async (req, res) => {
   const id = req.params.id;
   
   try {
-    const countResult = await pool.query(
-      'SELECT COUNT(*) AS c FROM entries WHERE user_id = $1',
-      [id]
-    );
+    // Supprimer d'abord toutes les entrées de l'utilisateur
+    await pool.query('DELETE FROM entries WHERE user_id = $1', [id]);
     
-    if (countResult.rows[0].c > 0) {
-      return res.status(400).json({ error: 'User has entries and cannot be deleted' });
-    }
-    
+    // Puis supprimer l'utilisateur
     const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
     
     if (result.rowCount === 0) {
