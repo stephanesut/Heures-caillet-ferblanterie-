@@ -58,7 +58,7 @@ async function initDatabase() {
     `);
     
     // Seed default users
-    const defaultUsers = ['Luca', 'Stéphane', 'Joel', 'Frank', 'admin'];
+    const defaultUsers = ['Luca', 'Stéphane', 'Joel', 'Frank', 'Admin'];
     for (const userName of defaultUsers) {
       await client.query(
         'INSERT INTO users (name) VALUES ($1) ON CONFLICT (name) DO NOTHING',

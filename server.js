@@ -36,7 +36,7 @@ db.serialize(() => {
   // Try to add user_id column to entries (ignore error if exists)
   db.run('ALTER TABLE entries ADD COLUMN user_id INTEGER', (err) => {});
   // Seed default users if they do not exist
-  const defaultUsers = ['Luca','Stéphane','Joel','Frank','admin'];
+  const defaultUsers = ['Luca','Stéphane','Joel','Frank','Admin'];
   defaultUsers.forEach((n) => {
     db.run('INSERT OR IGNORE INTO users (name) VALUES (?)', [n]);
   });
