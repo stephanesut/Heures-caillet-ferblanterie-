@@ -209,7 +209,7 @@ app.get('/api/export', (req, res) => {
     params.push(userId);
   }
   
-  query += ' ORDER BY e.date ASC';
+  query += ' ORDER BY u.name ASC, e.date ASC';
   
   db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -220,19 +220,18 @@ app.get('/api/export', (req, res) => {
 
     doc.fontSize(18).text(`Récapitulatif des heures - ${month}`, { align: 'center' });
     doc.moveDown();
+
+    const weekdays = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
     
-    // Afficher le nom de l'utilisateur si filtré
-    if (userId && rows.length > 0 && rows[0].user_name) {
+    if (rows.length === 0) {
+      doc.fontSize(12).text('Aucune entrée pour ce mois.');
+    } else if (userId) {
+      // Vue utilisateur simple
       doc.fontSize(14).text(`Utilisateur: ${rows[0].user_name}`, { align: 'center' });
       doc.moveDown();
-    }
-
-    let total = 0;
-    doc.fontSize(12);
-    if (rows.length === 0) {
-      doc.text('Aucune entrée pour ce mois.');
-    } else {
-      const weekdays = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+      doc.fontSize(12);
+      
+      let total = 0;
       rows.forEach((r) => {
         const d = new Date(r.date + 'T00:00:00');
         let dateLabel = r.date;
@@ -247,6 +246,62 @@ app.get('/api/export', (req, res) => {
       });
       doc.moveDown();
       doc.fontSize(14).text(`Total: ${total.toFixed(2)} h`);
+      
+    } else {
+      // Vue admin : grouper par utilisateur
+      const groupedByUser = {};
+      rows.forEach((r) => {
+        const userName = r.user_name || 'Utilisateur inconnu';
+        if (!groupedByUser[userName]) groupedByUser[userName] = [];
+        groupedByUser[userName].push(r);
+      });
+      
+      let grandTotal = 0;
+      const userNames = Object.keys(groupedByUser).sort();
+      
+      userNames.forEach((userName, index) => {
+        if (index > 0) {
+          doc.addPage();
+        }
+        
+        doc.fontSize(16).text(`${userName}`, { underline: true });
+        doc.moveDown();
+        doc.fontSize(12);
+        
+        let userTotal = 0;
+        groupedByUser[userName].forEach((r) => {
+          const d = new Date(r.date + 'T00:00:00');
+          let dateLabel = r.date;
+          if (!isNaN(d)){
+            const day = String(d.getDate()).padStart(2,'0');
+            const monthNum = String(d.getMonth()+1).padStart(2,'0');
+            const weekday = weekdays[d.getDay()];
+            dateLabel = `${day}/${monthNum} (${weekday})`;
+          }
+          doc.text(`${dateLabel} — ${r.chantier} — ${r.hours} h`);
+          userTotal += parseFloat(r.hours);
+        });
+        
+        doc.moveDown();
+        doc.fontSize(14).text(`Total ${userName}: ${userTotal.toFixed(2)} h`, { bold: true });
+        grandTotal += userTotal;
+      });
+      
+      doc.addPage();
+      doc.fontSize(18).text(`Récapitulatif Global`, { align: 'center', underline: true });
+      doc.moveDown();
+      doc.fontSize(14);
+      
+      userNames.forEach((userName) => {
+        let userTotal = 0;
+        groupedByUser[userName].forEach((r) => {
+          userTotal += parseFloat(r.hours);
+        });
+        doc.text(`${userName}: ${userTotal.toFixed(2)} h`);
+      });
+      
+      doc.moveDown();
+      doc.fontSize(16).text(`TOTAL GÉNÉRAL: ${grandTotal.toFixed(2)} h`, { bold: true });
     }
 
     doc.end();
