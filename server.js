@@ -198,9 +198,20 @@ app.delete('/api/entries/:id', (req, res) => {
 // Export monthly recap as PDF
 app.get('/api/export', (req, res) => {
   const month = req.query.month; // YYYY-MM
+  const userId = req.query.userId;
   if (!month) return res.status(400).send('month query param required (YYYY-MM)');
-  const like = month + '%';
-  db.all('SELECT * FROM entries WHERE date LIKE ? ORDER BY date ASC', [like], (err, rows) => {
+  
+  let query = 'SELECT e.*, u.name as user_name FROM entries e LEFT JOIN users u ON e.user_id = u.id WHERE e.date LIKE ?';
+  const params = [month + '%'];
+  
+  if (userId) {
+    query += ' AND e.user_id = ?';
+    params.push(userId);
+  }
+  
+  query += ' ORDER BY e.date ASC';
+  
+  db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     const doc = new PDFDocument({ margin: 50 });
     res.setHeader('Content-disposition', `attachment; filename=recap-${month}.pdf`);
@@ -209,6 +220,12 @@ app.get('/api/export', (req, res) => {
 
     doc.fontSize(18).text(`Récapitulatif des heures - ${month}`, { align: 'center' });
     doc.moveDown();
+    
+    // Afficher le nom de l'utilisateur si filtré
+    if (userId && rows.length > 0 && rows[0].user_name) {
+      doc.fontSize(14).text(`Utilisateur: ${rows[0].user_name}`, { align: 'center' });
+      doc.moveDown();
+    }
 
     let total = 0;
     doc.fontSize(12);
