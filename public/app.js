@@ -340,35 +340,138 @@ async function loadMonth(){
   }
 
   const currentName = (currentUserName && currentUserName.textContent || '').toLowerCase();
-  const qs = (currentName.toLowerCase() === 'admin') ? `month=${month}` : `month=${month}&userId=${activeUser}`;
+  const isAdminView = currentName === 'admin';
+  const qs = isAdminView ? `month=${month}` : `month=${month}&userId=${activeUser}`;
+  
   let usersMap = {};
-  try { const ru = await fetch('/api/users'); if (ru.ok) { const us = await ru.json(); us.forEach(u => usersMap[u.id] = u.name); } } catch (e) {}
+  let usersList = [];
+  try { 
+    const ru = await fetch('/api/users'); 
+    if (ru.ok) { 
+      const us = await ru.json(); 
+      us.forEach(u => { usersMap[u.id] = u.name; });
+      usersList = us;
+    } 
+  } catch (e) {}
+  
   const res = await fetch(`/api/entries?${qs}`);
   if (!res.ok) { showToast('Erreur lors du chargement', 'error'); return }
   const rows = await res.json();
+  
+  const table = document.getElementById('table');
+  const thead = table.querySelector('thead');
+  const tfoot = table.querySelector('tfoot');
   tbody.innerHTML='';
-  let total = 0;
-  rows.forEach(r => {
-    const tr = document.createElement('tr');
-    const d = document.createElement('td'); d.textContent = formatRecapDate(r.date); tr.appendChild(d);
-    const c = document.createElement('td'); c.textContent = r.chantier; tr.appendChild(c);
-    const u = document.createElement('td'); u.textContent = usersMap[r.user_id] || r.user_id || ''; tr.appendChild(u);
-    const h = document.createElement('td'); h.textContent = r.hours; tr.appendChild(h);
-    const a = document.createElement('td');
-    const editBtn = document.createElement('button'); editBtn.textContent = 'Modifier';
-    editBtn.addEventListener('click', () => editEntry(tr, r));
-    const delBtn = document.createElement('button'); delBtn.textContent = 'Supprimer';
-    delBtn.addEventListener('click', async () => {
-      if (!confirm('Supprimer cette entrée ?')) return;
-      const resp = await fetch('/api/entries/' + r.id, { method: 'DELETE' });
-      if (resp.ok) { showToast('Entrée supprimée', 'success'); loadMonth(); } else showToast('Erreur suppression', 'error');
+  
+  if (isAdminView) {
+    // Vue Admin : colonnes par utilisateur
+    const groupedByUser = {};
+    const allDates = new Set();
+    
+    rows.forEach(r => {
+      const userId = r.user_id || 'inconnu';
+      if (!groupedByUser[userId]) groupedByUser[userId] = {};
+      const dateKey = r.date + '_' + r.chantier;
+      if (!groupedByUser[userId][dateKey]) groupedByUser[userId][dateKey] = { date: r.date, chantier: r.chantier, hours: 0 };
+      groupedByUser[userId][dateKey].hours += parseFloat(r.hours);
+      allDates.add(dateKey);
     });
-    a.appendChild(editBtn); a.appendChild(delBtn);
-    tr.appendChild(a);
-    tbody.appendChild(tr);
-    total += parseFloat(r.hours);
-  });
-  totalEl.textContent = total.toFixed(2);
+    
+    // Construire le header avec colonnes utilisateurs
+    thead.innerHTML = '<tr><th>Date</th><th>Chantier</th>';
+    const userIds = Object.keys(groupedByUser);
+    userIds.forEach(uid => {
+      const th = document.createElement('th');
+      th.textContent = usersMap[uid] || uid;
+      thead.querySelector('tr').appendChild(th);
+    });
+    thead.querySelector('tr').innerHTML += '<th>Total</th></tr>';
+    
+    // Construire les lignes
+    const dateEntries = {};
+    rows.forEach(r => {
+      const dateKey = r.date + '_' + r.chantier;
+      if (!dateEntries[dateKey]) dateEntries[dateKey] = { date: r.date, chantier: r.chantier };
+    });
+    
+    Object.values(dateEntries).forEach(entry => {
+      const tr = document.createElement('tr');
+      const dateKey = entry.date + '_' + entry.chantier;
+      
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatRecapDate(entry.date);
+      tr.appendChild(tdDate);
+      
+      const tdChantier = document.createElement('td');
+      tdChantier.textContent = entry.chantier;
+      tr.appendChild(tdChantier);
+      
+      let rowTotal = 0;
+      userIds.forEach(uid => {
+        const td = document.createElement('td');
+        const hours = groupedByUser[uid] && groupedByUser[uid][dateKey] ? groupedByUser[uid][dateKey].hours : 0;
+        td.textContent = hours > 0 ? hours.toFixed(2) : '-';
+        td.style.textAlign = 'center';
+        tr.appendChild(td);
+        rowTotal += hours;
+      });
+      
+      const tdRowTotal = document.createElement('td');
+      tdRowTotal.textContent = rowTotal.toFixed(2);
+      tdRowTotal.style.fontWeight = '600';
+      tr.appendChild(tdRowTotal);
+      
+      tbody.appendChild(tr);
+    });
+    
+    // Totaux par utilisateur
+    tfoot.innerHTML = '<tr><td colspan="2">Total</td>';
+    let grandTotal = 0;
+    userIds.forEach(uid => {
+      let userTotal = 0;
+      Object.values(groupedByUser[uid] || {}).forEach(entry => {
+        userTotal += entry.hours;
+      });
+      const td = document.createElement('td');
+      td.textContent = userTotal.toFixed(2);
+      td.style.fontWeight = '600';
+      td.style.textAlign = 'center';
+      tfoot.querySelector('tr').appendChild(td);
+      grandTotal += userTotal;
+    });
+    const tdGrandTotal = document.createElement('td');
+    tdGrandTotal.textContent = grandTotal.toFixed(2);
+    tdGrandTotal.style.fontWeight = '600';
+    tdGrandTotal.id = 'total';
+    tfoot.querySelector('tr').appendChild(tdGrandTotal);
+    tfoot.querySelector('tr').innerHTML += '</tr>';
+    
+  } else {
+    // Vue utilisateur normale
+    thead.innerHTML = '<tr><th>Date</th><th>Chantier</th><th>Utilisateur</th><th>Heures</th></tr>';
+    let total = 0;
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      const d = document.createElement('td'); d.textContent = formatRecapDate(r.date); tr.appendChild(d);
+      const c = document.createElement('td'); c.textContent = r.chantier; tr.appendChild(c);
+      const u = document.createElement('td'); u.textContent = usersMap[r.user_id] || r.user_id || ''; tr.appendChild(u);
+      const h = document.createElement('td'); h.textContent = r.hours; tr.appendChild(h);
+      const a = document.createElement('td');
+      const editBtn = document.createElement('button'); editBtn.textContent = 'Modifier';
+      editBtn.addEventListener('click', () => editEntry(tr, r));
+      const delBtn = document.createElement('button'); delBtn.textContent = 'Supprimer';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Supprimer cette entrée ?')) return;
+        const resp = await fetch('/api/entries/' + r.id, { method: 'DELETE' });
+        if (resp.ok) { showToast('Entrée supprimée', 'success'); loadMonth(); } else showToast('Erreur suppression', 'error');
+      });
+      a.appendChild(editBtn); a.appendChild(delBtn);
+      tr.appendChild(a);
+      tbody.appendChild(tr);
+      total += parseFloat(r.hours);
+    });
+    tfoot.innerHTML = '<tr><td colspan="3">Total</td><td id="total">' + total.toFixed(2) + '</td></tr>';
+  }
 }
 
 function createInput(tag, value, type='text'){
